@@ -5,6 +5,7 @@ module Relation = struct
     | Less
     | Leq
     | Unknown
+    [@@deriving ord]
 
     let mul (a : t) (b : t) =
         match (a, b) with
@@ -21,6 +22,7 @@ end
 
 module Matrix = struct
     type t = Relation.t array array
+    [@@deriving ord]
     
     let mul (a : t) (b : t) =
         let a_rows = Array.length a in
@@ -41,32 +43,50 @@ module Matrix = struct
         Array.mapi (fun i row -> row.(i)) a
 end
 
-type fn = {name: string; arity: int}
-[@@deriving ord]
-
-module FnOrd = struct
-    type t = fn
-    let compare = compare_fn
+module Fn = struct
+    type t = {name: string; arity: int}
+    [@@deriving ord]
 end
 
-module FunctionMap = Map.Make(FnOrd)
+module FunctionMap = Map.Make(Fn)
+
+module Edge = struct
+    type t = Fn.t * Fn.t * Matrix.t
+    [@@deriving ord]
+end
+
+module AdjacencyList = Set.Make(Edge)
 
 module Graph = struct
-    type edge = fn * fn * Matrix.t
-    type t = edge list
+    type t = AdjacencyList.t
 
-    (* TODO: compose, union *)
+    let complete (graph : t) =
+        let compose (a : t) (b : t) =
+            Seq.map_product
+                (fun (g1, h, b) (f, g2, a) -> if g1 = g2 then Some (f, h, (Matrix.mul b a)) else None)
+                (AdjacencyList.to_seq a)
+                (AdjacencyList.to_seq b)
+            |> Seq.filter_map (Fun.id) in
+        let result = ref(graph) in
+        let next = ref(graph) in
+        while not (AdjacencyList.equal !result !next) do
+            result := !next;
+            next := AdjacencyList.add_seq
+                (compose !result graph)
+                !result
+        done;
+        !result
 
     let get_self_edges (graph : t) =
-        List.fold_left
-            (fun map (f, g, matrix) ->
+        AdjacencyList.fold
+            (fun (f, g, matrix) map ->
                 if f = g then (
                     assert (Array.length matrix = Array.length matrix.(0));
                     map |> FunctionMap.update f (fun l -> match l with
                     | Some l -> Some (matrix::l)
-                    | None -> Some([matrix]))
+                    | None -> Some [matrix])
                 ) else
                     map)
-            FunctionMap.empty
             graph
+            FunctionMap.empty
 end
