@@ -37,6 +37,8 @@ module Matrix = struct
                 Array.map2 Relation.mul a.(r) b_col |> Array.fold_left Relation.add Unknown
             )
 
+    let diagonal (a : t) =
+        Array.mapi (fun i row -> row.(i)) a
 end
 
 type fn = {name: string; arity: int}
@@ -58,11 +60,12 @@ module Graph = struct
     let get_self_edges (graph : t) =
         List.fold_left
             (fun map (f, g, matrix) ->
-                if f = g then
+                if f = g then (
+                    assert (Array.length matrix = Array.length matrix.(0));
                     map |> FunctionMap.update f (fun l -> match l with
                     | Some l -> Some (matrix::l)
                     | None -> Some([matrix]))
-                else
+                ) else
                     map)
             FunctionMap.empty
             graph
