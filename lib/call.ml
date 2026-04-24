@@ -67,7 +67,7 @@ module Graph = struct
                 (AdjacencyList.to_seq a)
                 (AdjacencyList.to_seq b)
             |> Seq.filter_map (Fun.id) in
-        let result = ref(graph) in
+        let result = ref(AdjacencyList.empty) in
         let next = ref(graph) in
         while not (AdjacencyList.equal !result !next) do
             result := !next;
