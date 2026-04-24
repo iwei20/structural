@@ -20,8 +20,8 @@
             (with pkgs.ocamlPackages; [
               dune_3
               ocaml-lsp
-              core
               findlib
+              ppx_deriving
             ]);
 
           env = {
