@@ -59,7 +59,9 @@ module Graph = struct
         List.fold_left
             (fun map (f, g, matrix) ->
                 if f = g then
-                    map |> FunctionMap.update f (Fun.const (Some matrix))
+                    map |> FunctionMap.update f (fun l -> match l with
+                    | Some l -> Some (matrix::l)
+                    | None -> Some([matrix]))
                 else
                     map)
             FunctionMap.empty
