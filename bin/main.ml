@@ -1,1 +1,3 @@
+open Structural
+
 let () = print_endline "Hello, World!"
