@@ -44,7 +44,7 @@ module Matrix = struct
 end
 
 module Fn = struct
-    type t = {name: string; arity: int}
+    type t = string (* Paper also wants arity, but I am a little not *)
     [@@deriving ord]
 end
 
