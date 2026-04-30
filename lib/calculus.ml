@@ -26,7 +26,7 @@ let rec extract (deps : Dependencies.t) (stack : FunctionStack.t) (term : Term.t
     match term with
     | Var(x) -> AdjacencyList.empty
     | Inj(_, e) -> extract deps stack e
-    | Case(e_scrut, cases) -> AdjacencyList.empty
+    | Case(e_scrut, cases) -> AdjacencyList.empty (* TODO *)
     | Tuple(components) ->
         List.fold_left
             (fun acc c -> AdjacencyList.union acc (extract deps stack c))
