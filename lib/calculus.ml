@@ -12,23 +12,26 @@ module Term = struct
     | App of t * t list
     | Fold of t
     | Unfold of t
-    [@@deriving ord]
+    [@@deriving show, ord]
 end
 
 module TermMap = Map.Make(Term)
 
 module Dependencies = struct
     type t = (Term.t * Relation.t) TermMap.t
+    type l = (Term.t * (Term.t * Relation.t)) list
+    [@@deriving show]
 end
 
 module FunctionStack = struct
-    type t = (string * string list) list 
+    type t = (string * string list) list
+    [@@deriving show]
 end
 
 exception Unreachable
 
 let rec relation (deps : Dependencies.t) (a : Term.t) (b : string) =
-    match a with
+    let result = match a with
     | Var(a) when a = b -> Relation.Leq (* refl *)
     | Var(a) -> (* trans *)
         begin match TermMap.find_opt (Var(a)) deps with
@@ -61,9 +64,20 @@ let rec relation (deps : Dependencies.t) (a : Term.t) (b : string) =
         | Relation.Unknown -> Relation.Unknown
         end
     | _ -> Relation.Unknown
+    in
+    print_endline
+        ("Relation with dependencies " ^
+        (Dependencies.show_l (TermMap.to_list deps)) ^
+        " between term " ^
+        (Term.show a) ^
+        " and variable " ^
+        b ^
+        " is: " ^
+        (Relation.show result));
+    result
 
 let rec extract (deps : Dependencies.t) (stack : FunctionStack.t) (term : Term.t) =
-    match term with
+    let result = match term with
     | Var(x) -> AdjacencyList.empty
     | Inj(_, e) -> extract deps stack e
     | Case(e_scrut, cases) ->
@@ -119,4 +133,15 @@ let rec extract (deps : Dependencies.t) (stack : FunctionStack.t) (term : Term.t
         | (_, _) -> AdjacencyList.union calls_args (extract deps stack e_fun)
         end
     | Fold(e) -> extract deps stack e
-    | Unfold(e) -> extract deps stack e
+    | Unfold(e) -> extract deps stack e in
+    print_endline (
+        "Graph extracted from dependencies " ^
+        (Dependencies.show_l (TermMap.to_list deps)) ^
+        " and stack " ^
+        (FunctionStack.show stack) ^
+        " on term " ^
+        (Term.show term) ^
+        " is " ^
+        (AdjListConverted.show (AdjacencyList.to_list result))
+        );
+    result

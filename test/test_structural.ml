@@ -14,18 +14,20 @@ let test_flat_aux () =
             ]))))
         ]))), [Term.Proj(1, Term.Var("p")); Term.Proj(2, Term.Var("p"))]))
     ]))) in
-    assert (Structural.Check.check flat);
+    let result = Structural.Check.check flat in
+    assert result;
     print_string "Checker result: ";
-    print_endline (Bool.to_string (Structural.Check.check flat));
+    print_endline (Bool.to_string result);
     print_endline "Passed";
     print_newline ()
 
 let test_inf () =
     print_endline "Testing infinite recursive example";
     let bad = Term.Rec("f", Term.Lam(["x"], Term.App(Term.Var("f"), [Term.Var("x")]))) in
-    assert (not (Structural.Check.check bad));
+    let result = Structural.Check.check bad in
+    assert (not result);
     print_string "Checker result: ";
-    print_endline (Bool.to_string (Structural.Check.check bad));
+    print_endline (Bool.to_string result);
     print_endline "Passed";
     print_newline ()
 
@@ -41,9 +43,10 @@ let test_sum () =
             ("_", Term.App(Term.Var("sum"), [Term.Proj(2, Term.Var("hdtl"))]))
         ]))
     ]))) in
-    assert (not (Structural.Check.check sum));
+    let result = Structural.Check.check sum in
+    assert (not result);
     print_string "Checker result: ";
-    print_endline (Bool.to_string (Structural.Check.check sum));
+    print_endline (Bool.to_string result);
     print_endline "Passed";
     print_newline ()
 

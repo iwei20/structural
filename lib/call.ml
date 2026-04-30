@@ -5,7 +5,7 @@ module Relation = struct
     | Less
     | Leq
     | Unknown
-    [@@deriving ord]
+    [@@deriving show,ord]
 
     let mul (a : t) (b : t) =
         match (a, b) with
@@ -22,7 +22,7 @@ end
 
 module Matrix = struct
     type t = Relation.t array array
-    [@@deriving ord]
+    [@@deriving show,ord]
     
     let mul (a : t) (b : t) =
         let a_rows = Array.length a in
@@ -45,17 +45,27 @@ end
 
 module Fn = struct
     type t = string (* Paper also wants arity, but I am a little not *)
-    [@@deriving ord]
+    [@@deriving show,ord]
 end
 
 module FunctionMap = Map.Make(Fn)
 
+module FunMapConverted = struct
+    type t = (Fn.t * Matrix.t list) list
+    [@@deriving show]
+end
+
 module Edge = struct
     type t = Fn.t * Fn.t * Matrix.t
-    [@@deriving ord]
+    [@@deriving show,ord]
 end
 
 module AdjacencyList = Set.Make(Edge)
+
+module AdjListConverted = struct
+    type t = Edge.t list
+    [@@deriving show]
+end
 
 module Graph = struct
     type t = AdjacencyList.t
@@ -75,10 +85,11 @@ module Graph = struct
                 (compose !result graph)
                 !result
         done;
+        print_endline ("Completed graph is " ^ (AdjListConverted.show (AdjacencyList.to_list !result)));
         !result
 
     let get_self_edges (graph : t) =
-        AdjacencyList.fold
+        let result = AdjacencyList.fold
             (fun (f, g, matrix) map ->
                 if f = g then (
                     assert (Array.length matrix = Array.length matrix.(0));
@@ -88,5 +99,7 @@ module Graph = struct
                 ) else
                     map)
             graph
-            FunctionMap.empty
+            FunctionMap.empty in
+        print_endline ("Self edges are " ^ (FunMapConverted.show (FunctionMap.to_list result)));
+        result
 end
